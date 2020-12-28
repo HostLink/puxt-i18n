@@ -1,5 +1,8 @@
 <?php
 
+namespace PUXT\I18N;
+
+use stdClass;
 use Gettext\GettextTranslator;
 use Gettext\Translations;
 use Twig\Extensions\Node\TransNode;
