@@ -122,7 +122,7 @@ class App
             if ($path == "") {
                 $path = "index.html";
             }
-            $path = __DIR__ . "/puxt-i18n-nuxt/dist/" . $path;
+            $path = __DIR__ . "/dist/" . $path;
             readfile($path);
             die();
         }
