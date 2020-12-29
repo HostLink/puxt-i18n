@@ -213,23 +213,26 @@ class App
     }
 }
 
-return function () {
+return function ($options) {
 
     if (substr($this->context->route->path, 0, 5) == "_i18n") {
+
+        //acl
+        if (!isset($_SERVER['PHP_AUTH_USER'])) {
+            header('WWW-Authenticate: Basic realm="puxt i18n"');
+            header('HTTP/1.0 401 Unauthorized');
+            exit;
+        }
+
+        if ($_SERVER['PHP_AUTH_USER'] != $options["username"] && $_SERVER['PHP_AUTH_PW'] != $options["password"]) {
+            header('WWW-Authenticate: Basic realm="puxt i18n"');
+            header('HTTP/1.0 401 Unauthorized');
+            exit;
+        }
+
         $path = substr($this->context->route->path, 6);
         $app = new App($this->root, $this->config["i18n"], $path);
         $app->run();
         die();
-    }
-
-    if ($i18n = $this->config["i18n"]) {
-        $this->i18n = new stdClass();
-        $this->context->i18n->locale = $i18n["defaultLocale"];
-
-        $paths = explode("/", $this->context->route->path);
-        if (in_array($paths[0], $i18n["locales"])) {
-            $this->context->i18n->locale = array_shift($paths);
-            $this->context->route->path = implode("/", $paths);
-        }
     }
 };
