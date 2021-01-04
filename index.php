@@ -123,6 +123,10 @@ class App
                 $path = "index.html";
             }
             $path = __DIR__ . "/dist/" . $path;
+            if(substr($path,-3)==".js"){
+                header("Content-type: application/javascript");        
+            }
+
             readfile($path);
             die();
         }
