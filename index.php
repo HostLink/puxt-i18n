@@ -66,7 +66,7 @@ class App
         foreach ($this->getToken($file) as $str) {
             $msgstr = [];
             foreach ($this->getLocales() as $lang) {
-                $msgstr[$lang] = $data[$lang][$str];
+                $msgstr[$lang] = $data[$lang][$str] ?? "";
                 unset($data[$lang][$str]);
             }
             $ds[] = ["msgid" => $str, "msgstr" => $msgstr];
@@ -123,8 +123,8 @@ class App
                 $path = "index.html";
             }
             $path = __DIR__ . "/dist/" . $path;
-            if(substr($path,-3)==".js"){
-                header("Content-type: application/javascript");        
+            if (substr($path, -3) == ".js") {
+                header("Content-type: application/javascript");
             }
 
             readfile($path);
