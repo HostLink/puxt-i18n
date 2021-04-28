@@ -218,27 +218,28 @@ class App
 }
 
 return function ($options) {
+    $this->puxt->hook("ready", function ($puxt) use ($options) {
+        if (substr($puxt->context->route->path, 0, 5) == "_i18n") {
 
-    if (substr($this->context->route->path, 0, 5) == "_i18n") {
+            if ($options) {
+                //acl
+                if (!isset($_SERVER['PHP_AUTH_USER'])) {
+                    header('WWW-Authenticate: Basic realm="puxt i18n"');
+                    header('HTTP/1.0 401 Unauthorized');
+                    exit;
+                }
 
-        if ($options) {
-            //acl
-            if (!isset($_SERVER['PHP_AUTH_USER'])) {
-                header('WWW-Authenticate: Basic realm="puxt i18n"');
-                header('HTTP/1.0 401 Unauthorized');
-                exit;
+                if ($_SERVER['PHP_AUTH_USER'] != $options["username"] && $_SERVER['PHP_AUTH_PW'] != $options["password"]) {
+                    header('WWW-Authenticate: Basic realm="puxt i18n"');
+                    header('HTTP/1.0 401 Unauthorized');
+                    exit;
+                }
             }
 
-            if ($_SERVER['PHP_AUTH_USER'] != $options["username"] && $_SERVER['PHP_AUTH_PW'] != $options["password"]) {
-                header('WWW-Authenticate: Basic realm="puxt i18n"');
-                header('HTTP/1.0 401 Unauthorized');
-                exit;
-            }
+            $path = substr($puxt->context->route->path, 6);
+            $app = new App($puxt->root, $puxt->config["i18n"], $path);
+            $app->run();
+            die();
         }
-
-        $path = substr($this->context->route->path, 6);
-        $app = new App($this->root, $this->config["i18n"], $path);
-        $app->run();
-        die();
-    }
+    });
 };
