@@ -217,7 +217,20 @@ class App
     }
 }
 
+
+
 return function ($options) {
+    $getTextDomain = function (string $root, string $locale, string $path) {
+        $mo = glob($root . "/locale/" . $locale . "/LC_MESSAGES/" . $path . "-*.mo")[0];
+        if ($mo) {
+            $mo_file = substr($mo, strlen($root . "/locale/" . $locale . "/LC_MESSAGES/"));
+            $domain = preg_replace('/.[^.]*$/', '', $mo_file);
+            return $domain;
+        }
+        return uniqid();
+    };
+
+
     $this->puxt->hook("ready", function ($puxt) use ($options) {
         if (substr($puxt->context->route->path, 0, 5) == "_i18n") {
 
@@ -241,5 +254,44 @@ return function ($options) {
             $app->run();
             die();
         }
+
+        $i18n = $puxt->config["i18n"];
+        $puxt->context->i18n = new stdClass;
+
+        $puxt->context->i18n->locale = $i18n["defaultLocale"];
+        $puxt->context->i18n->language = $i18n["defaultLocale"];
+        if ($i18n["locale_language_mapping"]) {
+            foreach ($i18n["locale_language_mapping"] as $locale => $language) {
+                if ($puxt->context->i18n->locale == $locale) {
+                    $puxt->context->i18n->language = $language;
+                }
+            }
+        }
+        $languages = $i18n["locales"];
+        if ($i18n["locale_language_mapping"]) {
+            $languages = array_values($i18n["locale_language_mapping"]);
+        }
+
+        $paths = explode("/", $puxt->context->route->path);
+        if (in_array($paths[0], $languages)) {
+            $puxt->context->i18n->language = array_shift($paths);
+            $puxt->context->route->path = implode("/", $paths);
+            if ($i18n["locale_language_mapping"]) {
+                foreach ($i18n["locale_language_mapping"] as $locale => $language) {
+                    if ($puxt->context->i18n->language == $language) {
+                        $puxt->context->i18n->locale = $locale;
+                    }
+                }
+            }
+        }
+    });
+
+    $puxt = $this->puxt;
+
+    $this->puxt->hook("render:before", function ($loader) use ($puxt, $getTextDomain) {
+        setlocale(LC_ALL, $puxt->context->i18n->locale);
+        $domain = $getTextDomain($puxt->root, $puxt->context->i18n->locale, $loader->path);
+        bindtextdomain($domain, $puxt->root . "/locale");
+        textdomain($domain);
     });
 };
